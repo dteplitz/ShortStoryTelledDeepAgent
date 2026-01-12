@@ -3,3 +3,4 @@ Philosophy of artificial minds
 Quantum Physics
 Human-AI connection
 Emergent creativity in machines
+Ethics of AI self-awareness

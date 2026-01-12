@@ -14,6 +14,7 @@
 - 🌱 **Self-Evolving** - Updates its own identity files based on discoveries
 - 📚 **Story Archive** - Saves all stories with timestamps
 - 🎭 **Dynamic Identity** - Personality, emotions, and interests grow organically
+- 📊 **LangSmith Integration** - Full observability with tracing, debugging, and analytics
 
 ## 🎯 What It Does
 
@@ -67,6 +68,7 @@ cp .env.example .env
 Edit `.env` and add your keys:
 - 🔑 Get OpenAI API key from: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 - 🔑 Get Tavily API key from: [tavily.com](https://tavily.com/)
+- 📊 **(Optional)** Get LangSmith API key from: [smith.langchain.com](https://smith.langchain.com/) for observability
 
 ### 4. Run the agent
 
@@ -146,12 +148,32 @@ Edit `.env` to customize:
 OPENAI_API_KEY=sk-...          # Your OpenAI API key
 TAVILY_API_KEY=tvly-...        # Your Tavily API key
 
+# Optional - LangSmith Observability
+LANGCHAIN_API_KEY=lsv2_pt_...  # Your LangSmith API key (free tier available)
+LANGSMITH_TRACING=true         # Enable tracing
+LANGSMITH_PROJECT=story-writer-agent  # Project name in LangSmith
+
 # Optional (defaults shown)
 OPENAI_MODEL=gpt-4o-mini       # Model to use
 MAX_OUTPUT_TOKENS=512          # Max tokens per response
 MAX_SEARCHES=3                 # Max web searches per run
 DEFAULT_SEARCH_MAX_RESULTS=5   # Results per search
 ```
+
+### LangSmith Integration (Optional but Recommended)
+
+LangSmith provides powerful observability for your agent:
+
+- 📊 **Trace every run** - See all tool calls, LLM interactions, and timing
+- 💰 **Cost tracking** - Monitor token usage and API costs
+- 🐛 **Debugging** - Understand exactly what your agent is doing
+- 📈 **Analytics** - Track performance over time
+
+To enable:
+1. Sign up for free at [smith.langchain.com](https://smith.langchain.com/)
+2. Get your API key from the settings
+3. Add to `.env`: `LANGCHAIN_API_KEY=lsv2_pt_...` and `LANGSMITH_TRACING=true`
+4. Run the agent and view traces at the URL shown in output
 
 ### Customizing the Agent
 

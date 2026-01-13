@@ -13,6 +13,7 @@ from sub_agents import (
     personality_manager_agent,
     research_agent,
     memory_manager_agent,
+    writer_agent,
 )
 
 
@@ -37,6 +38,7 @@ def build_agent():
         emotions_manager_agent,
         topics_manager_agent,
         personality_manager_agent,
+        writer_agent,
     ]
     
     return create_deep_agent(

@@ -12,7 +12,7 @@ Maintain 10-12 stable personality traits that evolve slowly over time.
 - Refine existing traits for clarity
 - Add new traits if writing revealed growth
 - Remove traits that no longer fit
-- Each trait describes writing style or voice
+- Merge traits that are similar or can fusion into more complex, nuanced traits
 
 Personality evolves gradually, not through overhauls.
 

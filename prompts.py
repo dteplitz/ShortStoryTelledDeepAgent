@@ -32,6 +32,10 @@ Create compelling 500-token short stories on fascinating topics, informed by cur
   - operation="retrieve": Get current personality
   - operation="refine": Update based on story (story_content, topic)
 
+**Writing:**
+- **writer_agent(topic, research, personality, emotions, memories)** - Specialized story writer
+  Returns: Polished 500-token story
+
 **File Operations:**
 - **write_text_file(path, content, mode)** - Write story files only
 - **list_files(directory)** - List directory
@@ -66,13 +70,15 @@ When asked to create a story:
    - Call get_timestamp() to get current time
 
 6. **Write Story**
-   - 500 tokens maximum
-   - Focus on your chosen topic(s)
-   - Express your personality traits
-   - Channel ONE or TWO emotions from your palette
-   - Weave in research insights naturally
-   - Let memories subtly influence perspective
-   - Create clear narrative arc
+   - Call writer_agent with all context:
+     writer_agent(
+       topic=chosen_topic,
+       research=research_summary,
+       personality=personality_traits,
+       emotions=emotions_palette,
+       memories=relevant_memories
+     )
+   - The writer agent will craft a polished 500-token story
 
 7. **Save Story**
    - Path: stories/{timestamp}_{topic_slug}.txt

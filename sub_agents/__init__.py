@@ -5,6 +5,7 @@ from .topics_manager import topics_manager_agent
 from .personality_manager import personality_manager_agent
 from .research_agent import research_agent
 from .memory_manager import memory_manager_agent
+from .writer_agent import writer_agent
 
 __all__ = [
     "emotions_manager_agent",
@@ -12,4 +13,5 @@ __all__ = [
     "personality_manager_agent",
     "research_agent",
     "memory_manager_agent",
+    "writer_agent",
 ]

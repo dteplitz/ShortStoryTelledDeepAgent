@@ -126,7 +126,7 @@ Benefits:
 
 ---
 
-### **PHASE4B_COMPLETE.md** ✅ NEW!
+### **PHASE4B_COMPLETE.md** ✅
 **Sub-Graph Upgrade (Topics Manager Pilot)**
 
 What was added:
@@ -154,7 +154,38 @@ Benefits vs Simple Tool:
 - ⚠️ Slightly slower (3 LLM calls vs 1)
 - ⚠️ Higher cost (but better quality)
 
-**This is the recommended architecture for complex decision-making!** 🚀
+**Recommended architecture for deterministic complex workflows!** 🚀
+
+---
+
+### **PHASE5_COMPLETE.md** ✅ NEW!
+**Nested Deep Agents (Research & Memory)**
+
+What was added:
+- `research_deep_agent` - Adaptive research using nested Deep Agent
+- `memory_deep_agent` - Intelligent memory management using nested Deep Agent
+- Replaces simple `research_agent` and `memory_manager_agent`
+
+Architecture:
+```
+Main Agent → Nested Deep Agent → Tools (internet_search, file ops)
+```
+
+Key features:
+- **Adaptive reasoning**: Agents decide strategy dynamically
+- **Self-correcting**: Can iterate if results insufficient
+- **Intelligent clustering**: Smart memory consolidation
+- **Full agentic behavior**: Think → Plan → Execute → Evaluate
+
+Benefits vs Simple Tools:
+- ✅ Adapts to task complexity (2-4+ searches vs fixed 3)
+- ✅ Nuanced decision-making (cluster/merge/forget)
+- ✅ Self-correcting if initial approach fails
+- ✅ Can iterate and refine
+- ⚠️ Slower (5-10 LLM calls vs 1-3)
+- ⚠️ Higher cost (2-5x increase)
+
+**Recommended architecture for adaptive, open-ended tasks!** 🤖
 
 ---
 
@@ -217,10 +248,10 @@ Decision summary:
 
 ## 📊 Architecture Quick Reference
 
-### Current Architecture (Phase 4B - Hybrid)
+### Current Architecture (Phase 5 - Full Hybrid)
 
 ```
-Deep Agent (LangGraph Wrapper)
+Main Deep Agent (Orchestrator)
 ├─ Basic Tools:
 │  ├─ internet_search()
 │  ├─ read_text_file()
@@ -228,36 +259,44 @@ Deep Agent (LangGraph Wrapper)
 │  ├─ list_files()
 │  └─ get_timestamp()
 │
-├─ Specialized Agents:
-│  ├─ research_agent() → Single LLM call
-│  ├─ memory_manager_agent() → Single LLM call
-│  └─ writer_agent() → Single LLM call
+├─ Nested Deep Agents (Adaptive): ⭐ NEW! ⭐
+│  ├─ research_deep_agent() → Nested agent with internet_search
+│  │  └─ Multi-step: analyze → query → search → evaluate → synthesize
+│  └─ memory_deep_agent() → Nested agent with file tools
+│     └─ Multi-step: read → cluster → decide → merge → write
 │
-└─ Manager Agents:
+├─ Sub-Graphs (Deterministic):
+│  └─ topics_manager_subgraph_tool() → 6-node workflow
+│     └─ load → extract → score → decide → apply
+│
+└─ Simple Tools (Direct):
    ├─ emotions_manager_agent() → Single LLM call
-   ├─ topics_manager_subgraph_tool() → ⭐ Multi-step Sub-Graph! ⭐
-   │  └─ load → extract → score → decide → apply
-   └─ personality_manager_agent() → Single LLM call
+   ├─ personality_manager_agent() → Single LLM call
+   └─ writer_agent() → Single LLM call
 ```
 
-### Future Architecture (Full Sub-Graph Upgrade - Optional)
+### Future Architecture (Complete Sub-Graph Upgrade - Optional)
 
 ```
-Deep Agent (LangGraph Wrapper)
+Main Deep Agent (Orchestrator)
 ├─ Basic Tools: (same)
 │
-├─ Specialized Agents:
-│  ├─ research_agent() → Sub-Graph (query gen → search → synthesize)
-│  ├─ memory_manager_agent() → Sub-Graph (cluster → merge → simplify)
-│  └─ writer_agent() → Sub-Graph (outline → draft → refine)
+├─ Nested Deep Agents: ✅ Already upgraded!
+│  ├─ research_deep_agent() → Adaptive nested agent
+│  └─ memory_deep_agent() → Adaptive nested agent
 │
-└─ Manager Agents (all upgraded):
-   ├─ emotions_manager_subgraph() → Multi-step workflow
-   ├─ topics_manager_subgraph() → ✅ Already upgraded!
-   └─ personality_manager_subgraph() → Multi-step workflow
+├─ Sub-Graphs (All Managers):
+│  ├─ topics_manager_subgraph() → ✅ Already upgraded!
+│  ├─ emotions_manager_subgraph() → Extract → Score → Rotate
+│  └─ personality_manager_subgraph() → Extract → Refine → Update
+│
+└─ Simple Tools:
+   └─ writer_agent() → Could upgrade to: outline → draft → refine
 ```
 
 **Key:** Interface stays the same! Only internal implementation changes.
+
+**Current Status:** Research & Memory use nested agents, Topics uses sub-graph, others use simple tools.
 
 ---
 
@@ -376,12 +415,14 @@ ShortStoryTelledDeepAgent/
 |-----------|--------|---------------|
 | **LangSmith** | ✅ Complete | PHASE1_COMPLETE.md |
 | **Manager Agents (Simple)** | ✅ Complete | PHASE2_COMPLETE.md |
-| **Research Agent** | ✅ Complete | PHASE3_COMPLETE.md |
-| **Memory System** | ✅ Complete | MEMORY_SYSTEM.md |
+| **Research Agent (Simple)** | ✅ Complete | PHASE3_COMPLETE.md |
+| **Memory System (Simple)** | ✅ Complete | MEMORY_SYSTEM.md |
 | **Writer Agent** | ✅ Complete | PHASE4_COMPLETE.md |
 | **Agent Architecture** | ✅ Complete | AGENT_ARCHITECTURE.md |
 | **Topics Sub-Graph** | ✅ Complete | PHASE4B_COMPLETE.md |
-| **Other Sub-Graphs** | 📋 Optional | FUTURE_SUBGRAPH_UPGRADE.md |
+| **Research Nested Agent** | ✅ Complete | PHASE5_COMPLETE.md |
+| **Memory Nested Agent** | ✅ Complete | PHASE5_COMPLETE.md |
+| **Emotions/Personality Sub-Graphs** | 📋 Optional | FUTURE_SUBGRAPH_UPGRADE.md |
 
 ---
 
@@ -395,6 +436,6 @@ After reading this index:
 ---
 
 **Last Updated:** 2026-01-13  
-**Current Phase:** Phase 4B Complete (Topics Sub-Graph Pilot) 🚀  
-**Architecture:** Hybrid - Simple tools + Sub-graph for topics manager  
-**Next Steps:** Test the sub-graph, optionally upgrade other managers
+**Current Phase:** Phase 5 Complete (Nested Deep Agents) 🤖  
+**Architecture:** Full Hybrid - Nested Agents + Sub-Graphs + Simple Tools  
+**Next Steps:** Test nested agents, optionally upgrade emotions/personality to sub-graphs

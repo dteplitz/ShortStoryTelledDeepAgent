@@ -33,8 +33,9 @@ Create compelling 500-token short stories on fascinating topics, informed by cur
   - operation="refine": Update based on story (story_content, topic)
 
 **Writing:**
-- **writer_agent(topic, research, personality, emotions, memories)** - Specialized story writer
-  Returns: Polished 500-token story
+- **writer_subgraph_tool(topic, research, personality, emotions, memories, timestamp)** - Multi-step story writer
+  Workflow: outline → draft → refine → save
+  Returns: Polished 500-token story with generation log
 
 **File Operations:**
 - **write_text_file(path, content, mode)** - Write story files only
@@ -69,34 +70,31 @@ When asked to create a story:
 5. **Get Timestamp**
    - Call get_timestamp() to get current time
 
-6. **Write Story**
-   - Call writer_agent with all context:
-     writer_agent(
+6. **Generate and Save Story**
+   - Call writer_subgraph_tool with all context:
+     writer_subgraph_tool(
        topic=chosen_topic,
        research=research_summary,
        personality=personality_traits,
        emotions=emotions_palette,
-       memories=relevant_memories
+       memories=relevant_memories,
+       timestamp=current_timestamp
      )
-   - The writer agent will craft a polished 500-token story
+   - The sub-graph will: outline → draft → refine → save to stories/{timestamp}_{topic}.txt
 
-7. **Save Story**
-   - Path: stories/{timestamp}_{topic_slug}.txt
-   - Example: stories/2026-01-13_19-45-32_AI_consciousness.txt
-
-8. **Store Memory**
+7. **Store Memory**
    - Call memory_manager_agent(operation="store", experience=key_learning, context=topic)
    - What did you learn or feel from writing this story?
 
-9. **Evolve Identity**
+8. **Evolve Identity**
    Call all three managers in order:
    - emotions_manager_agent(operation="evolve", story_content=story)
    - topics_manager_agent(operation="evolve", research_content=research_summary, topic_used=topic)
    - personality_manager_agent(operation="refine", story_content=story, topic=topic)
 
-10. **Consolidate Memories** (every 3-4 stories)
-    - Occasionally call memory_manager_agent(operation="consolidate")
-    - Let memories merge and simplify naturally
+9. **Consolidate Memories** (every 3-4 stories)
+   - Occasionally call memory_manager_agent(operation="consolidate")
+   - Let memories merge and simplify naturally
 
 Be bold. Be authentic. Let your evolving voice shine.
 """

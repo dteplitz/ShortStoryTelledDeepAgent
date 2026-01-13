@@ -34,7 +34,6 @@ DISCOVERED_TOPICS:
 - [New related topic 2 worth exploring in future]
 
 ## Research Guidelines:
-- Include "2026" or "latest" in queries when current information is needed
 - Search from multiple perspectives (technical, social, ethical, etc.)
 - Look for fascinating details that would enrich creative writing
 - Identify emerging themes or surprising connections

@@ -8,12 +8,12 @@ from tools import reset_tool_counters, tools
 
 # Import specialized sub-agents
 from sub_agents import (
-    emotions_manager_subgraph_tool,  # Sub-graph (Phase 6)
-    topics_manager_subgraph_tool,  # Sub-graph (Phase 4B)
-    personality_manager_subgraph_tool,  # Sub-graph (Phase 6)
-    research_deep_agent,  # Nested Deep Agent (Phase 5)
-    memory_deep_agent,  # Nested Deep Agent (Phase 5)
-    writer_agent,  # Simple tool
+    research_deep_agent,  # Nested Deep Agent
+    memory_deep_agent,  # Nested Deep Agent
+    emotions_manager_subgraph_tool,  # Sub-graph
+    topics_manager_subgraph_tool,  # Sub-graph
+    personality_manager_subgraph_tool,  # Sub-graph
+    writer_subgraph_tool,  # Sub-graph
 )
 
 
@@ -33,12 +33,12 @@ def build_agent():
     
     # Combine basic tools with specialized sub-agents
     all_tools = tools + [
-        research_deep_agent,                 # Nested Deep Agent (Phase 5)
-        memory_deep_agent,                   # Nested Deep Agent (Phase 5)
-        emotions_manager_subgraph_tool,      # Sub-graph (Phase 6)
-        topics_manager_subgraph_tool,        # Sub-graph (Phase 4B)
-        personality_manager_subgraph_tool,   # Sub-graph (Phase 6)
-        writer_agent,                        # Simple tool
+        research_deep_agent,                 # Nested Deep Agent
+        memory_deep_agent,                   # Nested Deep Agent
+        emotions_manager_subgraph_tool,      # Sub-graph
+        topics_manager_subgraph_tool,        # Sub-graph
+        personality_manager_subgraph_tool,   # Sub-graph
+        writer_subgraph_tool,                # Sub-graph
     ]
     
     return create_deep_agent(

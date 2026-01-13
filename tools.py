@@ -106,13 +106,98 @@ def reset_tool_counters() -> None:
     search_counter = 0
 
 
+def use_skill(skill_name: str) -> str:
+    """
+    Load and use an Agent Skill.
+    
+    This loads the skill's full instructions and available resources.
+    Level 2 loading - brings skill guidance into context.
+    
+    Args:
+        skill_name: Name of the skill to use (e.g., 'narrative_structure')
+    
+    Returns:
+        The skill's instructions and available resources
+    """
+    from skills_system import get_skills_manager
+    
+    manager = get_skills_manager()
+    skill_content = manager.load_skill_content(skill_name)
+    
+    if not skill_content:
+        available = [m.name for m in manager.get_all_metadata()]
+        return f"Skill '{skill_name}' not found. Available skills: {', '.join(available)}"
+    
+    response = [
+        f"# {skill_content.metadata.name}",
+        "",
+        skill_content.instructions,
+        "",
+    ]
+    
+    if skill_content.available_resources:
+        response.append("## Available Resources:")
+        for resource in skill_content.available_resources:
+            response.append(f"- {resource}")
+        response.append("\nTo read a resource: read_skill_resource(skill_name='...', resource_path='...')")
+    
+    return "\n".join(response)
+
+
+def read_skill_resource(skill_name: str, resource_path: str) -> str:
+    """
+    Read a specific resource file from a skill.
+    
+    Level 3 loading - loads detailed reference materials on-demand.
+    
+    Args:
+        skill_name: Name of the skill
+        resource_path: Path to resource within skill (e.g., 'templates/hero_journey.txt')
+    
+    Returns:
+        The resource content
+    """
+    from skills_system import get_skills_manager
+    
+    manager = get_skills_manager()
+    content = manager.read_resource(skill_name, resource_path)
+    
+    if content is None:
+        return f"Resource '{resource_path}' not found in skill '{skill_name}'"
+    
+    return content
+
+
+def execute_skill_script(skill_name: str, script_path: str, args: str = "") -> str:
+    """
+    Execute a Python script from a skill.
+    
+    Level 3 loading - runs skill code without loading into context.
+    
+    Args:
+        skill_name: Name of the skill
+        script_path: Path to script within skill (e.g., 'scripts/validate.py')
+        args: Optional comma-separated arguments to pass to script
+    
+    Returns:
+        Script output
+    """
+    from skills_system import get_skills_manager
+    
+    manager = get_skills_manager()
+    script_args = args.split(",") if args else []
+    return manager.execute_skill_script(skill_name, script_path, *script_args)
+
+
 # Provide custom tools to access real filesystem files
 # StateBackend is for virtual filesystem, but we need real file access
+# Note: Skill tools (use_skill, read_skill_resource) are NOT in main agent tools
+# They're available to writer_subgraph nodes directly
 tools = [
     internet_search,
     read_text_file,
     write_text_file,
     list_files,
-    get_timestamp
+    get_timestamp,
 ]
 

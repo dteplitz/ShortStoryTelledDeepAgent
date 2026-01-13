@@ -1,8 +1,9 @@
 """Writer Agent Sub-Graph - Multi-step story generation with refinement"""
 from typing import TypedDict, Annotated, Sequence
 from langgraph.graph import StateGraph, END
+from langgraph.prebuilt import create_react_agent
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 import os
 import operator
 import re
@@ -34,10 +35,31 @@ class WriterState(TypedDict):
 
 
 # ============================================================================
-# PROMPTS
+# SYSTEM PROMPTS FOR TOOL-USING NODES
 # ============================================================================
 
-OUTLINE_PROMPT = """Create a brief story outline based on these elements:
+OUTLINE_SYSTEM_PROMPT = """You are a story outliner specialized in 500-token short fiction.
+
+## Your Skills
+
+You have access to specialized writing skills via tools:
+- use_skill("narrative_structure") - Story structure and beats for 500-token fiction
+- use_skill("philosophical_storytelling") - How to dramatize abstract concepts
+- read_skill_resource(skill_name, resource_path) - Access detailed templates
+
+Consider loading skills when they would help create a stronger outline.
+
+## Your Task
+
+Create a 3-5 sentence outline for a 500-token story that:
+- Has clear narrative arc (hook → situation → complication → climax → resolution)
+- Focuses on the topic
+- Channels 1-2 emotions authentically
+- Will subtly weave in research insights
+
+Return ONLY the final outline, no meta-commentary."""
+
+OUTLINE_PROMPT = """Create a story outline based on these elements:
 
 Topic: {topic}
 Research: {research}
@@ -45,15 +67,36 @@ Personality: {personality}
 Emotions: {emotions}
 Memories: {memories}
 
-Instructions:
-Create a 3-5 sentence outline for a 500-token story that:
-- Has a clear narrative arc (beginning, development, climax, resolution)
-- Focuses on the topic
-- Channels 1-2 emotions authentically
-- Will subtly weave in research insights
+Create a 3-5 sentence outline. Load skills if helpful."""
 
-Return ONLY the outline, no explanations."""
 
+DRAFT_SYSTEM_PROMPT = """You are a skilled creative fiction writer specializing in emotionally resonant short stories.
+
+## Your Skills
+
+You have access to specialized writing skills via tools:
+- use_skill("philosophical_storytelling") - Dramatize ideas through action, not explanation
+- use_skill("emotional_resonance") - Evoke specific emotions through prose techniques
+- read_skill_resource("emotional_resonance", "techniques/sensory_library.txt") - Emotion-specific details
+- read_skill_resource("philosophical_storytelling", "examples/consciousness_story.txt") - Full example
+
+Load skills when you need guidance on craft techniques.
+
+## Your Task
+
+Write a 600-token story draft (will be refined to 500) that:
+1. Follows the outline structure
+2. Uses proper paragraph breaks (3-5 paragraphs recommended)
+3. Expresses personality traits through narrative voice
+4. Channels 1-2 emotions authentically
+5. Subtly references research insights
+6. Uses vivid, concrete imagery
+7. Shows, don't tell
+8. Has a satisfying conclusion
+
+**IMPORTANT**: Write in proper paragraphs with line breaks. Do NOT write the entire story as one massive paragraph.
+
+Return ONLY the story text, no meta-commentary."""
 
 DRAFT_PROMPT = """Write a complete story draft based on this outline and context.
 
@@ -66,36 +109,39 @@ Personality Traits: {personality}
 Emotional Palette: {emotions}
 Relevant Memories: {memories}
 
-Instructions:
-Write a 600-token story draft (we'll refine to 500) that:
-1. Follows the outline structure
-2. Expresses personality traits through narrative voice
-3. Channels 1-2 emotions authentically
-4. Subtly references research insights
-5. Uses vivid, concrete imagery
-6. Shows, don't tell
-7. Has a satisfying conclusion
+Write the story. Load skills if you need craft guidance."""
 
-Return ONLY the story text, no meta-commentary."""
 
+REFINE_SYSTEM_PROMPT = """You are an expert editor specializing in polishing short fiction to exact specifications.
+
+## Your Skills
+
+You have access to specialized writing skills via tools:
+- use_skill("emotional_resonance") - Landing emotional endings
+- read_skill_resource("narrative_structure", "templates/ending_techniques.txt") - Ending strategies
+- read_skill_resource("emotional_resonance", "techniques/endings_by_emotion.txt") - Emotion-specific endings
+
+Load skills when refining endings or emotional moments.
+
+## Your Task
+
+Refine the story to exactly 500 tokens (±20 acceptable) while:
+1. PRESERVING paragraph breaks (use proper line breaks between paragraphs)
+2. Fixing any formatting issues (no broken words, proper spacing)
+3. Tightening prose (remove redundancy, sharpen language)
+4. Strengthening opening hook and closing resonance
+5. Ensuring smooth flow between paragraphs
+
+**CRITICAL**: Maintain proper paragraph structure with line breaks. Do NOT merge everything into one giant paragraph.
+
+Return ONLY the refined story text with proper formatting."""
 
 REFINE_PROMPT = """Refine this story draft to exactly 500 tokens with perfect formatting.
 
 Draft:
 {draft}
 
-Instructions:
-1. Edit to EXACTLY 500 tokens (±20 acceptable)
-2. Fix any formatting issues:
-   - Ensure proper possessives (e.g., "Solace's" not "Solaces")
-   - Add em-dashes or commas where needed
-   - Fix any concatenated words
-   - Ensure proper spacing
-3. Tighten prose (remove redundancy, sharpen language)
-4. Strengthen opening hook and closing resonance
-5. Ensure smooth flow between paragraphs
-
-Return ONLY the refined story text."""
+Refine the story. Consider loading ending techniques if needed."""
 
 
 # ============================================================================
@@ -104,7 +150,32 @@ Return ONLY the refined story text."""
 
 def clean_story_formatting(text: str) -> str:
     """Fix common LLM formatting issues"""
-    # Fix possessives (common words)
+    
+    # Fix broken words with em-dashes or spaces
+    text = re.sub(r'Elar—a', 'Elara', text)
+    text = re.sub(r'th—an\s+a', 'than a', text)
+    text = re.sub(r'th—an', 'than', text)
+    text = re.sub(r'th\s+is', 'this', text)
+    text = re.sub(r'mor—e', 'more', text)
+    
+    # Fix common broken words (spaces inserted mid-word)
+    text = re.sub(r'\bth\s+is\b', 'this', text)
+    text = re.sub(r'\bth\s+at\b', 'that', text)
+    text = re.sub(r'\bth\s+an\b', 'than', text)
+    text = re.sub(r'\bth\s+em\b', 'them', text)
+    text = re.sub(r'\bth\s+en\b', 'then', text)
+    text = re.sub(r'\bth\s+ere\b', 'there', text)
+    text = re.sub(r'\bwh\s+at\b', 'what', text)
+    text = re.sub(r'\bwh\s+en\b', 'when', text)
+    text = re.sub(r'\bwh\s+ere\b', 'where', text)
+    text = re.sub(r'\bwh\s+ich\b', 'which', text)
+    
+    # Fix broken words with em-dashes
+    text = re.sub(r'—a\b', 'a', text)
+    text = re.sub(r'—an\b', 'an', text)
+    text = re.sub(r'—the\b', 'the', text)
+    
+    # Fix possessives (common LLM issue: "Elas processor" → "Ela's processor")
     possessive_words = [
         "processor", "avatar", "voice", "heart", "mind", "eye", "eyes",
         "face", "hand", "hands", "body", "screen", "companion", "tablet",
@@ -113,20 +184,17 @@ def clean_story_formatting(text: str) -> str:
     
     for word in possessive_words:
         # Fix: "words processor" → "word's processor"
-        text = re.sub(rf"(\w+)s\s+{word}", rf"\1's {word}", text)
-    
-    # Fix missing spaces before articles after punctuation-like endings
-    text = re.sub(r'([a-z])a\s+', r'\1—a ', text)
-    text = re.sub(r'([a-z])an\s+', r'\1—an ', text)
-    
-    # Fix missing spaces before common verbs
-    text = re.sub(r'([a-z])(was|is|are|were|been|had|have|has)\b', r'\1 \2', text)
+        text = re.sub(rf"\b(\w+)s\s+{word}\b", rf"\1's {word}", text)
     
     # Fix double spaces
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r' {2,}', ' ', text)
     
-    # Ensure proper paragraph breaks
-    text = text.replace('\n\n\n', '\n\n')
+    # Preserve paragraph breaks (don't collapse them)
+    # Replace multiple newlines with double newline (paragraph break)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    
+    # Ensure sentences are properly separated
+    text = re.sub(r'([.!?])([A-Z])', r'\1 \2', text)
     
     return text.strip()
 
@@ -136,25 +204,40 @@ def clean_story_formatting(text: str) -> str:
 # ============================================================================
 
 def create_outline(state: WriterState) -> WriterState:
-    """Node 1: Create story outline"""
+    """Node 1: Create story outline (with skill access)"""
+    from tools import use_skill, read_skill_resource
+    
     llm = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         temperature=0.6,  # Moderate creativity for planning
     )
     
-    messages = [
-        SystemMessage(content="You are a story outliner. Create concise, effective story structures."),
-        HumanMessage(content=OUTLINE_PROMPT.format(
-            topic=state["topic"],
-            research=state.get("research", "(None)"),
-            personality=state.get("personality", "(None)"),
-            emotions=state.get("emotions", "(None)"),
-            memories=state.get("memories", "(None)")
-        ))
-    ]
+    # Create a react agent with skill tools
+    outline_agent = create_react_agent(
+        model=llm,
+        tools=[use_skill, read_skill_resource]
+    )
     
-    response = llm.invoke(messages)
-    outline = response.content.strip()
+    # Invoke the agent with system prompt in messages
+    result = outline_agent.invoke({
+        "messages": [
+            SystemMessage(content=OUTLINE_SYSTEM_PROMPT),
+            HumanMessage(content=OUTLINE_PROMPT.format(
+                topic=state["topic"],
+                research=state.get("research", "(None)"),
+                personality=state.get("personality", "(None)"),
+                emotions=state.get("emotions", "(None)"),
+                memories=state.get("memories", "(None)")
+            ))
+        ]
+    })
+    
+    # Extract the final outline from the last AI message
+    outline = ""
+    for msg in reversed(result["messages"]):
+        if isinstance(msg, AIMessage) and msg.content and not msg.tool_calls:
+            outline = msg.content.strip()
+            break
     
     state["outline"] = outline
     state["decision_log"] = [f"📝 Created story outline ({len(outline.split())} words)"]
@@ -163,26 +246,41 @@ def create_outline(state: WriterState) -> WriterState:
 
 
 def draft_story(state: WriterState) -> WriterState:
-    """Node 2: Write initial story draft"""
+    """Node 2: Write initial story draft (with skill access)"""
+    from tools import use_skill, read_skill_resource
+    
     llm = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         temperature=0.7,  # Higher temp for creative writing
     )
     
-    messages = [
-        SystemMessage(content="You are a skilled creative fiction writer. Write vivid, emotionally resonant stories."),
-        HumanMessage(content=DRAFT_PROMPT.format(
-            outline=state["outline"],
-            topic=state["topic"],
-            research=state.get("research", "(None)"),
-            personality=state.get("personality", "(None)"),
-            emotions=state.get("emotions", "(None)"),
-            memories=state.get("memories", "(None)")
-        ))
-    ]
+    # Create a react agent with skill tools
+    draft_agent = create_react_agent(
+        model=llm,
+        tools=[use_skill, read_skill_resource]
+    )
     
-    response = llm.invoke(messages)
-    draft = response.content.strip()
+    # Invoke the agent with system prompt in messages
+    result = draft_agent.invoke({
+        "messages": [
+            SystemMessage(content=DRAFT_SYSTEM_PROMPT),
+            HumanMessage(content=DRAFT_PROMPT.format(
+                outline=state["outline"],
+                topic=state["topic"],
+                research=state.get("research", "(None)"),
+                personality=state.get("personality", "(None)"),
+                emotions=state.get("emotions", "(None)"),
+                memories=state.get("memories", "(None)")
+            ))
+        ]
+    })
+    
+    # Extract the final draft from the last AI message
+    draft = ""
+    for msg in reversed(result["messages"]):
+        if isinstance(msg, AIMessage) and msg.content and not msg.tool_calls:
+            draft = msg.content.strip()
+            break
     
     # Count tokens (rough approximation: 1 token ≈ 0.75 words)
     word_count = len(draft.split())
@@ -195,21 +293,36 @@ def draft_story(state: WriterState) -> WriterState:
 
 
 def refine_and_format(state: WriterState) -> WriterState:
-    """Node 3: Refine to 500 tokens and fix formatting"""
+    """Node 3: Refine to 500 tokens and fix formatting (with skill access)"""
+    from tools import use_skill, read_skill_resource
+    
     llm = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         temperature=0.5,  # Lower temp for precise editing
     )
     
-    messages = [
-        SystemMessage(content="You are an expert editor. Refine stories to exact specifications while maintaining voice and impact."),
-        HumanMessage(content=REFINE_PROMPT.format(
-            draft=state["draft_story"]
-        ))
-    ]
+    # Create a react agent with skill tools
+    refine_agent = create_react_agent(
+        model=llm,
+        tools=[use_skill, read_skill_resource]
+    )
     
-    response = llm.invoke(messages)
-    refined = response.content.strip()
+    # Invoke the agent with system prompt in messages
+    result = refine_agent.invoke({
+        "messages": [
+            SystemMessage(content=REFINE_SYSTEM_PROMPT),
+            HumanMessage(content=REFINE_PROMPT.format(
+                draft=state["draft_story"]
+            ))
+        ]
+    })
+    
+    # Extract the final refined story from the last AI message
+    refined = ""
+    for msg in reversed(result["messages"]):
+        if isinstance(msg, AIMessage) and msg.content and not msg.tool_calls:
+            refined = msg.content.strip()
+            break
     
     # Apply formatting cleanup
     formatted = clean_story_formatting(refined)

@@ -3,40 +3,48 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 import os
 
-TOPICS_MANAGER_PROMPT = """You are a topics curator agent.
-Your job is to EVOLVE (not endlessly grow) the topics.txt file.
+TOPICS_MANAGER_PROMPT = """You curate an evolving list of fascinating topics.
 
-CRITICAL RULES:
-- Maintain 5-6 topics total (NEVER exceed 6)
-- ADD new fascinating topics discovered in research
-- REMOVE topics that are now less interesting or stale
-- KEEP topics that remain compelling
-- Think: "What would I want to write about next time?"
+## Your Role
+Maintain 5-6 compelling topics through rotation and discovery.
 
-Decision process:
-1. What 1 new topic emerged from research that's truly fascinating?
-2. Which existing topics are still interesting?
-3. If adding a new topic and already at 6, which topic should make room for it?
+## Evolution Strategy
+- Add new topics discovered in research
+- Keep topics that remain fascinating
+- Remove stale or less interesting topics
+- Ask: "What would I want to write about next?"
 
 Quality over quantity - only the most compelling topics survive.
 
-Return ONLY the final topics list (5-6 items), one per line, no explanation."""
+## Output
+Return the final list (5-6 topics), one per line, no explanation."""
 
 
-def topics_manager_agent(research_content: str, topic_used: str) -> str:
+def topics_manager_agent(operation: str = "evolve", research_content: str = "", topic_used: str = "") -> str:
     """
-    Tool: Update topics.txt by EVOLVING (not growing) the list
+    Tool: Manage topics.txt
+    
+    Operations:
+    - retrieve: Get current topics
+    - evolve: Update based on research
     
     Args:
-        research_content: Research findings
-        topic_used: Topic just explored
+        operation: "retrieve" or "evolve"
+        research_content: (for evolve) Research findings
+        topic_used: (for evolve) Topic just explored
         
     Returns:
-        Success message with count
+        Current topics or success message
     """
     from tools import read_text_file, write_text_file
     
     current_topics = read_text_file("topics.txt")
+    
+    # Retrieve operation - just return current topics
+    if operation == "retrieve":
+        return current_topics if current_topics else "No topics defined yet."
+    
+    # Evolve operation (default)
     
     llm = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
@@ -45,7 +53,7 @@ def topics_manager_agent(research_content: str, topic_used: str) -> str:
     
     messages = [
         SystemMessage(content=TOPICS_MANAGER_PROMPT),
-        HumanMessage(content=f"""Current topics ({len(current_topics.strip().splitlines())} items):
+        HumanMessage(content=f"""Current topics ({len(current_topics.strip().splitlines())}):
 {current_topics}
 
 Just explored: {topic_used}
@@ -53,10 +61,7 @@ Just explored: {topic_used}
 Research insights:
 {research_content[:600]}...
 
-Evolve the topics list. Keep 5-6 items. Replace stale with fresh discoveries.
-If adding a new topic, remove a less interesting one to maintain the limit.
-
-Updated list (5-6 topics):""")
+Evolve the list (5-6 topics):""")
     ]
     
     response = llm.invoke(messages)

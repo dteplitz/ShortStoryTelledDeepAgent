@@ -6,11 +6,13 @@ from langchain_openai import ChatOpenAI
 from prompts import SYSTEM_PROMPT
 from tools import reset_tool_counters, tools
 
-# Import specialized file manager agents
+# Import specialized sub-agents
 from sub_agents import (
     emotions_manager_agent,
     topics_manager_agent,
     personality_manager_agent,
+    research_agent,
+    memory_manager_agent,
 )
 
 
@@ -28,8 +30,10 @@ def build_agent():
     def make_backend(runtime):
         return StateBackend(runtime)
     
-    # Combine basic tools with specialized manager agents
+    # Combine basic tools with specialized sub-agents
     all_tools = tools + [
+        research_agent,
+        memory_manager_agent,
         emotions_manager_agent,
         topics_manager_agent,
         personality_manager_agent,

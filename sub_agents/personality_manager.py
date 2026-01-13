@@ -3,41 +3,48 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 import os
 
-PERSONALITY_MANAGER_PROMPT = """You are a personality curator agent.
-Your job is to REFINE (not endlessly grow) the personality.txt file.
+PERSONALITY_MANAGER_PROMPT = """You refine a writer's personality through gradual evolution.
 
-CRITICAL RULES:
-- Maintain 10-12 traits (NEVER exceed 12)
-- Personality should be relatively stable but can evolve gradually
-- REFINE existing traits for clarity and accuracy
-- ADD new trait if writing revealed a new strength
-- REMOVE traits that don't fit anymore
-- Each trait is a descriptive phrase about writing style/voice
+## Your Role
+Maintain 10-12 stable personality traits that evolve slowly over time.
 
-Decision process:
-1. Did this story reveal a new writing strength worth capturing?
-2. Which traits are still accurate and well-phrased?
-3. Which traits could be refined or should be replaced?
+## Refinement Strategy
+- Refine existing traits for clarity
+- Add new traits if writing revealed growth
+- Remove traits that no longer fit
+- Each trait describes writing style or voice
 
-Personality evolves slowly - small refinements, not overhauls.
+Personality evolves gradually, not through overhauls.
 
-Return ONLY the final traits list (10-12 items), one per line, no explanation."""
+## Output
+Return the final list (10-12 traits), one per line, no explanation."""
 
 
-def personality_manager_agent(story_content: str, topic: str) -> str:
+def personality_manager_agent(operation: str = "refine", story_content: str = "", topic: str = "") -> str:
     """
-    Tool: Update personality.txt by REFINING the traits
+    Tool: Manage personality.txt
+    
+    Operations:
+    - retrieve: Get current personality
+    - refine: Update based on story
     
     Args:
-        story_content: Story just written
-        topic: Topic explored
+        operation: "retrieve" or "refine"
+        story_content: (for refine) Story just written
+        topic: (for refine) Topic explored
         
     Returns:
-        Success message with count
+        Current personality or success message
     """
     from tools import read_text_file, write_text_file
     
     current_personality = read_text_file("personality.txt")
+    
+    # Retrieve operation - just return current personality
+    if operation == "retrieve":
+        return current_personality if current_personality else "No personality defined yet."
+    
+    # Refine operation (default)
     
     llm = ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
@@ -46,16 +53,13 @@ def personality_manager_agent(story_content: str, topic: str) -> str:
     
     messages = [
         SystemMessage(content=PERSONALITY_MANAGER_PROMPT),
-        HumanMessage(content=f"""Current personality ({len(current_personality.strip().splitlines())} traits):
+        HumanMessage(content=f"""Current traits ({len(current_personality.strip().splitlines())}):
 {current_personality}
 
 Story (topic: {topic}):
 {story_content[:400]}...
 
-Refine the personality. Keep 10-12 traits. Evolve gradually, don't overhaul.
-Only add a new trait if removing one that no longer fits.
-
-Updated list (10-12 traits):""")
+Refine the personality (10-12 traits):""")
     ]
     
     response = llm.invoke(messages)

@@ -54,6 +54,54 @@ Key features:
 
 ---
 
+### **PHASE3_COMPLETE.md** ✅
+**Research Agent (Comprehensive Multi-Angle Research)**
+
+What was added:
+- Dedicated research specialist agent
+- `research_agent(topic)` - Multi-query research synthesis
+
+Key features:
+- Generates 2-3 focused search queries
+- Executes searches from multiple angles
+- Synthesizes findings intelligently
+- Returns: SUMMARY + KEY_FACTS + DISCOVERED_TOPICS
+- Automatic topic discovery for evolution
+
+---
+
+### **MEMORY_SYSTEM.md** ✅
+**Long-term Episodic Memory (Human-like Imperfection)**
+
+What was added:
+- Memory manager sub-agent
+- `memory_manager_agent(operation, ...)` - Store, retrieve, consolidate
+
+Key features:
+- Store significant experiences (15-20 memories)
+- Retrieve relevant memories by query
+- Consolidate: merge, simplify, allow natural distortion
+- Intentionally imperfect (like human memory)
+- Higher temperature for natural variation
+
+---
+
+### **AGENT_ARCHITECTURE.md** ✅
+**All Access Through Agents (No Direct File Reads)**
+
+Architecture principle:
+- All identity file access goes through specialized agents
+- Main orchestrator never reads/writes identity files directly
+- Only writes story files to stories/ directory
+
+Key features:
+- Consistent agent-based access pattern
+- retrieve/evolve operations for all managers
+- Full encapsulation and separation of concerns
+- Clear LangSmith traces showing agent hierarchy
+
+---
+
 ### **FILE_MANAGEMENT_IMPROVED.md**
 **File Evolution Philosophy**
 
@@ -264,9 +312,11 @@ ShortStoryTelledDeepAgent/
 |-----------|--------|---------------|
 | **LangSmith** | ✅ Complete | PHASE1_COMPLETE.md |
 | **Manager Agents** | ✅ Complete | PHASE2_COMPLETE.md |
+| **Research Agent** | ✅ Complete | PHASE3_COMPLETE.md |
+| **Memory System** | ✅ Complete | MEMORY_SYSTEM.md |
+| **Agent Architecture** | ✅ Complete | AGENT_ARCHITECTURE.md |
 | **Simple Tools** | ✅ Current | DEEP_AGENT_LANGGRAPH_ARCHITECTURE.md |
 | **Sub-Graph Tools** | 📋 Planned | FUTURE_SUBGRAPH_UPGRADE.md |
-| **Research Agent** | 📋 Planned | (Future Phase 3) |
 | **Writer Agent** | 📋 Planned | (Future Phase 4) |
 
 ---
@@ -280,6 +330,6 @@ After reading this index:
 
 ---
 
-**Last Updated:** 2026-01-12  
-**Current Phase:** Phase 2 Complete (Manager Agents with Simple Tools)  
-**Next Phase:** Optional upgrade to sub-graph tools (when needed)
+**Last Updated:** 2026-01-13  
+**Current Phase:** Phase 3.5 Complete (Research + Memory + Manager Agents)  
+**Next Phase:** Phase 4 (Writer Agent) or sub-graph upgrade (optional)

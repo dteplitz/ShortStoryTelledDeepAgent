@@ -7,6 +7,9 @@ from .research_agent import research_agent
 from .memory_manager import memory_manager_agent
 from .writer_agent import writer_agent
 
+# Sub-graph versions (Phase 4B)
+from .topics_subgraph import topics_manager_subgraph_tool
+
 __all__ = [
     "emotions_manager_agent",
     "topics_manager_agent",
@@ -14,4 +17,5 @@ __all__ = [
     "research_agent",
     "memory_manager_agent",
     "writer_agent",
+    "topics_manager_subgraph_tool",  # NEW: Sub-graph version
 ]

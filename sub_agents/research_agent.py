@@ -21,7 +21,6 @@ Topic: {topic}
 
 Requirements:
 - Explore different angles
-- Include "2026" or "latest" for currency
 - Cover developments, applications, implications
 
 Return ONLY a JSON array of query strings.

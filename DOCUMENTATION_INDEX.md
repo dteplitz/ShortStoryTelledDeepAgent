@@ -126,6 +126,38 @@ Benefits:
 
 ---
 
+### **PHASE4B_COMPLETE.md** ✅ NEW!
+**Sub-Graph Upgrade (Topics Manager Pilot)**
+
+What was added:
+- Multi-step LangGraph sub-graph for topics manager
+- `topics_manager_subgraph_tool` - Observable decision-making workflow
+- Replaces simple `topics_manager_agent` tool
+
+Architecture:
+```
+load → extract candidates → score existing → decide rotation → apply
+```
+
+Key features:
+- **Full observability**: 6 nodes visible in LangSmith
+- **Structured decisions**: Extract → Score → Decide → Apply
+- **Decision log**: Shows reasoning for each step
+- **Better debugging**: Inspect scores, candidates, decisions
+- **Explicit state**: See data flow through each node
+
+Benefits vs Simple Tool:
+- ✅ Multi-step LLM calls (extract, score, decide)
+- ✅ Transparent reasoning at each step
+- ✅ Better debugging with intermediate state
+- ✅ Easy to extend (add validation, retries, etc.)
+- ⚠️ Slightly slower (3 LLM calls vs 1)
+- ⚠️ Higher cost (but better quality)
+
+**This is the recommended architecture for complex decision-making!** 🚀
+
+---
+
 ### **FILE_MANAGEMENT_IMPROVED.md**
 **File Evolution Philosophy**
 
@@ -185,7 +217,7 @@ Decision summary:
 
 ## 📊 Architecture Quick Reference
 
-### Current Architecture (Phase 2)
+### Current Architecture (Phase 4B - Hybrid)
 
 ```
 Deep Agent (LangGraph Wrapper)
@@ -196,25 +228,33 @@ Deep Agent (LangGraph Wrapper)
 │  ├─ list_files()
 │  └─ get_timestamp()
 │
-└─ Manager Agents (as tools):
+├─ Specialized Agents:
+│  ├─ research_agent() → Single LLM call
+│  ├─ memory_manager_agent() → Single LLM call
+│  └─ writer_agent() → Single LLM call
+│
+└─ Manager Agents:
    ├─ emotions_manager_agent() → Single LLM call
-   ├─ topics_manager_agent() → Single LLM call
+   ├─ topics_manager_subgraph_tool() → ⭐ Multi-step Sub-Graph! ⭐
+   │  └─ load → extract → score → decide → apply
    └─ personality_manager_agent() → Single LLM call
 ```
 
-### Future Architecture (Optional Upgrade)
+### Future Architecture (Full Sub-Graph Upgrade - Optional)
 
 ```
 Deep Agent (LangGraph Wrapper)
 ├─ Basic Tools: (same)
 │
-└─ Manager Agents (as tools):
-   ├─ emotions_manager_agent() → Invokes Sub-Graph
-   │  └─ Multi-step LangGraph workflow
-   ├─ topics_manager_agent() → Invokes Sub-Graph
-   │  └─ Multi-step LangGraph workflow
-   └─ personality_manager_agent() → Invokes Sub-Graph
-      └─ Multi-step LangGraph workflow
+├─ Specialized Agents:
+│  ├─ research_agent() → Sub-Graph (query gen → search → synthesize)
+│  ├─ memory_manager_agent() → Sub-Graph (cluster → merge → simplify)
+│  └─ writer_agent() → Sub-Graph (outline → draft → refine)
+│
+└─ Manager Agents (all upgraded):
+   ├─ emotions_manager_subgraph() → Multi-step workflow
+   ├─ topics_manager_subgraph() → ✅ Already upgraded!
+   └─ personality_manager_subgraph() → Multi-step workflow
 ```
 
 **Key:** Interface stays the same! Only internal implementation changes.
@@ -335,13 +375,13 @@ ShortStoryTelledDeepAgent/
 | Component | Status | Documentation |
 |-----------|--------|---------------|
 | **LangSmith** | ✅ Complete | PHASE1_COMPLETE.md |
-| **Manager Agents** | ✅ Complete | PHASE2_COMPLETE.md |
+| **Manager Agents (Simple)** | ✅ Complete | PHASE2_COMPLETE.md |
 | **Research Agent** | ✅ Complete | PHASE3_COMPLETE.md |
 | **Memory System** | ✅ Complete | MEMORY_SYSTEM.md |
 | **Writer Agent** | ✅ Complete | PHASE4_COMPLETE.md |
 | **Agent Architecture** | ✅ Complete | AGENT_ARCHITECTURE.md |
-| **Simple Tools** | ✅ Current | DEEP_AGENT_LANGGRAPH_ARCHITECTURE.md |
-| **Sub-Graph Tools** | 📋 Future | FUTURE_SUBGRAPH_UPGRADE.md |
+| **Topics Sub-Graph** | ✅ Complete | PHASE4B_COMPLETE.md |
+| **Other Sub-Graphs** | 📋 Optional | FUTURE_SUBGRAPH_UPGRADE.md |
 
 ---
 
@@ -355,5 +395,6 @@ After reading this index:
 ---
 
 **Last Updated:** 2026-01-13  
-**Current Phase:** Phase 4 Complete (All Original Phases Done! 🎉)  
-**Next Phase:** Optional sub-graph upgrades (Phase 4B/2.5) or enjoy the complete system!
+**Current Phase:** Phase 4B Complete (Topics Sub-Graph Pilot) 🚀  
+**Architecture:** Hybrid - Simple tools + Sub-graph for topics manager  
+**Next Steps:** Test the sub-graph, optionally upgrade other managers
